@@ -46,7 +46,7 @@ static void example_lvgl_flush_cb(lv_disp_drv_t *drv, const lv_area_t *area, lv_
 static void example_increase_lvgl_tick(void *arg)
 {
     /* Tell LVGL how many milliseconds has elapsed */
-    lv_tick_inc(EXAMPLE_LVGL_TICK_PERIOD_MS);
+    lv_tick_inc(LVGL_TICK_PERIOD_MS);
 }
 
 void app_main(void)
@@ -64,7 +64,7 @@ void app_main(void)
     gpio_set_level(EXAMPLE_PIN_NUM_BK_LIGHT, EXAMPLE_LCD_BK_LIGHT_ON_LEVEL);
 
 /*----------------------------------------------------------------------------------------------------------------*/
-
+{
     ESP_LOGI(TAG, "Initialize Intel 8080 bus");
     esp_lcd_i80_bus_handle_t i80_bus = NULL;
     esp_lcd_i80_bus_config_t bus_config = {
@@ -87,9 +87,9 @@ void app_main(void)
         .sram_trans_align = 4,
     };
     ESP_ERROR_CHECK(esp_lcd_new_i80_bus(&bus_config, &i80_bus));
-
+}
 /*----------------------------------------------------------------------------------------------------------------*/
-
+{
     ESP_LOGI(TAG, "Initialize Intel 8080 panel io");
     esp_lcd_panel_io_handle_t io_handle = NULL;
     esp_lcd_panel_io_i80_config_t io_config = {
@@ -115,9 +115,9 @@ void app_main(void)
         .lcd_param_bits = EXAMPLE_LCD_PARAM_BITS,
     };
     ESP_ERROR_CHECK(esp_lcd_new_panel_io_i80(i80_bus, &io_config, &io_handle));
-
+}
 /*----------------------------------------------------------------------------------------------------------------*/
-
+{
     esp_lcd_panel_handle_t panel_handle = NULL;
     
     // ILI9341 is NOT a distinct driver, but a special case of ST7789
@@ -134,9 +134,9 @@ void app_main(void)
         .vendor_config = NULL
     };
     ESP_ERROR_CHECK(esp_lcd_new_panel_st7789(io_handle, &panel_config, &panel_handle));
-
+}
 /*----------------------------------------------------------------------------------------------------------------*/
-
+{
     // LCD Init Commands
     esp_lcd_panel_reset(panel_handle);
     esp_lcd_panel_init(panel_handle);
@@ -158,7 +158,7 @@ void app_main(void)
 
     // ESP_LOGI(TAG, "Turn on LCD backlight");
     // gpio_set_level(EXAMPLE_PIN_NUM_BK_LIGHT, EXAMPLE_LCD_BK_LIGHT_ON_LEVEL);
-
+}
 /*----------------------------------------------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------------------------------------------*/
@@ -204,7 +204,7 @@ void app_main(void)
     };
     esp_timer_handle_t lvgl_tick_timer = NULL;
     ESP_ERROR_CHECK(esp_timer_create(&lvgl_tick_timer_args, &lvgl_tick_timer));
-    ESP_ERROR_CHECK(esp_timer_start_periodic(lvgl_tick_timer, EXAMPLE_LVGL_TICK_PERIOD_MS * 1000));
+    ESP_ERROR_CHECK(esp_timer_start_periodic(lvgl_tick_timer, LVGL_TICK_PERIOD_MS * 1000));
 
     ESP_LOGI(TAG, "Display LVGL animation");
     example_lvgl_demo_ui(disp);

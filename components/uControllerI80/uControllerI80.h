@@ -29,9 +29,9 @@ void InitialiseBus()
 
     esp_lcd_i80_bus_config_t BusConfig = 
     {
-        .clk_src = LCD_CLK_SRC_DEFAULT,
         .dc_gpio_num = I80_PIN_NUM_DC,
         .wr_gpio_num = I80_PIN_NUM_PCLK,
+        .clk_src = LCD_CLK_SRC_DEFAULT,
         .data_gpio_nums = {
             I80_PIN_NUM_DATA0,
             I80_PIN_NUM_DATA1,
@@ -61,6 +61,10 @@ void InitialisePanelIO()
         .cs_gpio_num = I80_PIN_NUM_CS,
         .pclk_hz = I80_LCD_PIXEL_CLOCK_HZ,
         .trans_queue_depth = 10,
+        .on_color_trans_done = NULL, // example_notify_lvgl_flush_ready,
+        .user_ctx = NULL, //&disp_drv,
+        .lcd_cmd_bits = I80_LCD_CMD_BITS,
+        .lcd_param_bits = I80_LCD_PARAM_BITS,
         .dc_levels = {
             .dc_idle_level = 0,
             .dc_cmd_level = 0,
@@ -74,10 +78,6 @@ void InitialisePanelIO()
             .pclk_active_neg = 0,       // OK Rising Edge trigger
             .pclk_idle_low = 0          // OK PCLK is idle HIGH. H-L-H sequences
         },
-        .on_color_trans_done = example_notify_lvgl_flush_ready,
-        .user_ctx = &disp_drv,
-        .lcd_cmd_bits = I80_LCD_CMD_BITS,
-        .lcd_param_bits = I80_LCD_PARAM_BITS,
     };
 
     // TODO: Add RDX Pin initialisation
