@@ -6,10 +6,13 @@
 
 #include <math.h>
 #include "lvgl.h"
+#include "esp_log.h"
 
 #ifndef PI
 #define PI  (3.14159f)
 #endif
+
+static const char *TAG = "lvgl_demo_ui";
 
 // LVGL image declare
 LV_IMG_DECLARE(esp_logo)
@@ -139,5 +142,9 @@ void example_lvgl_demo_ui(lv_disp_t *disp)
     // Button event
     lv_obj_add_event_cb(btn, btn_cb, LV_EVENT_CLICKED, scr);
 
+    ESP_LOGI(TAG, "Start animation");
+
     start_animation(scr);
+
+    ESP_LOGI(TAG, "exiting");
 }

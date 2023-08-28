@@ -7,10 +7,13 @@
         "esp_timer.h": "c",
         "configuration.h": "c",
         "esp_lcd_panel_vendor.h": "c",
-        "task.h": "c"
+        "task.h": "c",
+        "ucontrolleri80.h": "c",
+        "pinnumbers.h": "c",
+        "displayinit.h": "c"
     },
     "idf.adapterTargetName": "esp32s3",
-    "idf.port": "/dev/ttyUSB0",
+    "idf.port": "/dev/cu.usbserial-1140",
     "idf.flashType": "UART",
     "idf.openOcdConfigs": [
         "interface/ftdi/esp32_devkitj_v1.cfg",
