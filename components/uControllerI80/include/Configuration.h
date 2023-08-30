@@ -4,7 +4,7 @@
 // PCLK frequency can't go too high as the limitation of PSRAM bandwidth
 #define I80_LCD_PIXEL_CLOCK_HZ     (2 * 1000 * 1000)
 #else
-#define I80_LCD_PIXEL_CLOCK_HZ     (20 * 1000 * 1000)
+#define I80_LCD_PIXEL_CLOCK_HZ     (25 * 1000 * 1000)
 #endif // CONFIG_EXAMPLE_LCD_I80_COLOR_IN_PSRAM
 
 /* Display Specific */
