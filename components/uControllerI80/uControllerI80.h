@@ -82,7 +82,7 @@ void InitialisePanelIO(esp_lcd_panel_io_color_trans_done_cb_t aColorTransferDone
     };
 
     // TODO: Add RDX Pin initialisation
-
+    // TODO: Add TE  Pin initialisation
     ESP_ERROR_CHECK(esp_lcd_new_panel_io_i80(I80BusHandle, &IOConfig, &PanelIOHandle));
 }
 
@@ -114,7 +114,7 @@ void SendTScreenCommandArray(const TScreenCommand *aCmdArr)
 	{
 		printf("[ INIT ] Screen Init Command, %02x \n", aCmdArr[index].Cmd);
 
-        esp_lcd_panel_io_tx_param(PanelIOHandle, aCmdArr[index].Cmd, aCmdArr[index].Data, aCmdArr[index].DataBytes & 0x7F);
+        esp_lcd_panel_io_tx_param(PanelIOHandle, aCmdArr[index].Cmd, aCmdArr[index].Data, aCmdArr[index].DataBytes & TFT_INIT_CMD_DATABYTES_MASK);
 
 		if (aCmdArr[index].DataBytes & TFT_INIT_DELAY)
 			vTaskDelay(pdMS_TO_TICKS(20)); //vTaskDelay(portTICK_PERIOD_MS);
@@ -143,7 +143,10 @@ void Initialise(esp_lcd_panel_io_color_trans_done_cb_t aColorTransferDoneCallbac
 
 static inline void I80TransferFull(const void *aBuffer)
 {
-    esp_lcd_panel_draw_bitmap(PanelHandle, 0, 0, I80_LCD_H_RES, I80_LCD_V_RES, aBuffer);
+    // TODO: Add Tearing Pin control
+
+    // esp_lcd_panel_draw_bitmap(PanelHandle, 0, 0, I80_LCD_H_RES, I80_LCD_V_RES, aBuffer);
+    esp_lcd_panel_io_tx_color(PanelIOHandle, ILI9163_RAMWR, aBuffer, I80_LCD_H_RES * I80_LCD_V_RES * 2);
 
     // panel_st7789_draw_bitmap(...);
     // panel_io_i80_tx_color(...);

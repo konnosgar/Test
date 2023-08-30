@@ -21,16 +21,13 @@ static bool example_notify_lvgl_flush_ready(esp_lcd_panel_io_handle_t panel_io, 
 }
 static void example_lvgl_flush_cb(lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t *color_map)
 {
-    ESP_LOGI(TAG, "example_lvgl_flush_cb");
     esp_lcd_panel_handle_t panel_handle = (esp_lcd_panel_handle_t) drv->user_data;
     int offsetx1 = area->x1;
     int offsetx2 = area->x2;
     int offsety1 = area->y1;
     int offsety2 = area->y2;
     // copy a buffer's content to a specific area of the display
-    ESP_LOGI(TAG, "draw ready");
     esp_lcd_panel_draw_bitmap(panel_handle, offsetx1, offsety1, offsetx2 + 1, offsety2 + 1, color_map);
-    ESP_LOGI(TAG, "draw finished");
 }
 static void example_increase_lvgl_tick(void *arg)
 {
@@ -43,10 +40,11 @@ void app_main(void)
     static lv_disp_draw_buf_t disp_buf; // contains internal graphic buffer(s) called draw buffer(s)
     static lv_disp_drv_t disp_drv;      // contains callback functions
 
-    Initialise(example_notify_lvgl_flush_ready, &disp_drv);
+    // Initialise(example_notify_lvgl_flush_ready, &disp_drv);
+    Initialise(NULL, NULL);
 
     ESP_LOGI(TAG, "Initialize LVGL library");
-    lv_init();
+    // lv_init();
 
     // Allocate draw buffers for LGVL
     lv_color_t *buf1 = NULL;
@@ -55,7 +53,7 @@ void app_main(void)
 #if CONFIG_EXAMPLE_LCD_I80_COLOR_IN_PSRAM
     buf1 = (lv_color_t*)heap_caps_aligned_alloc(I80_PSRAM_DATA_ALIGNMENT, I80_LCD_H_RES * I80_LCD_V_RES * sizeof(lv_color_t), MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
 #else
-    buf1 = (lv_color_t*)heap_caps_malloc(I80_LCD_H_RES * I80_LCD_V_RES * sizeof(lv_color_t), MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+    buf1 = (lv_color_t*)heap_caps_malloc(I80_LCD_H_RES * I80_LCD_V_RES * 2 /*sizeof(lv_color_t)*/, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
 #endif
     assert(buf1);
 #if CONFIG_EXAMPLE_LCD_I80_COLOR_IN_PSRAM
@@ -65,8 +63,27 @@ void app_main(void)
 #endif
     assert(buf2);
     ESP_LOGI(TAG, "buf1@%p, buf2@%p", buf1, buf2);
-    ESP_LOGI(TAG, "example_p@%p, example_lvgl@%p", &example_notify_lvgl_flush_ready, example_notify_lvgl_flush_ready);
-    ESP_LOGI(TAG, "disp_drv@%p, disp_buf@%p", &disp_buf, &disp_buf);
+
+    memset(buf1, 0x00, I80_LCD_H_RES * I80_LCD_V_RES * 2);
+
+    int LoopCounter = 0;
+
+    int LineYPosition = 0;
+    int Direction = 1;
+
+    while(1)
+    {
+        memset(buf1, 0xFF, I80_LCD_H_RES * I80_LCD_V_RES * 2);
+        memset(buf1 + I80_LCD_H_RES * LineYPosition, 0x00, I80_LCD_H_RES * 2);
+        I80TransferFull(buf1);
+
+        LineYPosition += Direction;
+        if(LineYPosition == 160) Direction = -1;
+        else if(LineYPosition == 0) Direction = 1;
+
+        // vTaskDelay(pdMS_TO_TICKS(1));
+        // ESP_LOGI(TAG, "LOOP %d", LoopCounter++);
+    }
 
     // initialize LVGL draw buffers
     lv_disp_draw_buf_init(&disp_buf, buf1, buf2, I80_LCD_H_RES * I80_LCD_V_RES);
