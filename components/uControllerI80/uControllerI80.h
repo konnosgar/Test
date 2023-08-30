@@ -82,7 +82,14 @@ void InitialisePanelIO(esp_lcd_panel_io_color_trans_done_cb_t aColorTransferDone
     };
 
     // TODO: Add RDX Pin initialisation
+
     // TODO: Add TE  Pin initialisation
+    gpio_config_t TEPinConfig = {
+        .mode = GPIO_MODE_DEF_INPUT,
+        .pin_bit_mask = 1ULL << I80_PIN_NUM_TE
+    };
+    ESP_ERROR_CHECK(gpio_config(&TEPinConfig));
+
     ESP_ERROR_CHECK(esp_lcd_new_panel_io_i80(I80BusHandle, &IOConfig, &PanelIOHandle));
 }
 

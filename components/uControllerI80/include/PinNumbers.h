@@ -1,5 +1,5 @@
 /* --------- Signal Pins --------- */
-#define I80_PIN_NUM_RDX         1
+#define I80_PIN_NUM_TE          1
 #define I80_PIN_NUM_RST         2
 #define I80_PIN_NUM_CS          3
 #define I80_PIN_NUM_DC          4

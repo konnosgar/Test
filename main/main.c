@@ -75,13 +75,16 @@ void app_main(void)
     {
         memset(buf1, 0xFF, I80_LCD_H_RES * I80_LCD_V_RES * 2);
         memset(buf1 + I80_LCD_H_RES * LineYPosition, 0x00, I80_LCD_H_RES * 2);
+
+        while(gpio_get_level(I80_PIN_NUM_TE) == 0) { ; }
+
         I80TransferFull(buf1);
 
         LineYPosition += Direction;
         if(LineYPosition == 160) Direction = -1;
         else if(LineYPosition == 0) Direction = 1;
 
-        // vTaskDelay(pdMS_TO_TICKS(1));
+        // vTaskDelay(pdMS_TO_TICKS(10));
         // ESP_LOGI(TAG, "LOOP %d", LoopCounter++);
     }
 
