@@ -41,7 +41,7 @@ void app_main(void)
     static lv_disp_drv_t disp_drv;      // contains callback functions
 
     // Initialise(example_notify_lvgl_flush_ready, &disp_drv);
-    Initialise(NULL, NULL);
+    Initialise(I80TransferDoneCallback, NULL);
 
     ESP_LOGI(TAG, "Initialize LVGL library");
     // lv_init();
@@ -73,6 +73,7 @@ void app_main(void)
 
     while(1)
     {
+        while(TransferDone == 0) { ; }
         memset(buf1, 0xFF, I80_LCD_H_RES * I80_LCD_V_RES * 2);
         memset(buf1 + I80_LCD_H_RES * LineYPosition, 0x00, I80_LCD_H_RES * 2);
         
@@ -82,7 +83,7 @@ void app_main(void)
         if(LineYPosition == 160) Direction = -1;
         else if(LineYPosition == 0) Direction = 1;
 
-        vTaskDelay(3);
+        vTaskDelay(1);
         // ESP_LOGI(TAG, "LOOP %d", LoopCounter++);
     }
 

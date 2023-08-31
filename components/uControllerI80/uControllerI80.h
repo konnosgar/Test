@@ -22,6 +22,14 @@ static esp_lcd_i80_bus_handle_t I80BusHandle = NULL;
 static esp_lcd_panel_io_handle_t PanelIOHandle = NULL;
 static esp_lcd_panel_handle_t PanelHandle = NULL;
 
+bool TransferDone = 1;
+
+static bool I80TransferDoneCallback(esp_lcd_panel_io_handle_t panel_io, esp_lcd_panel_io_event_data_t *edata, void *user_ctx)
+{
+    TransferDone = 1;
+    return true;
+}
+
 void InitialiseBus()
 {
     ESP_LOGI(TAG, "Initialise I80 bus");
@@ -163,6 +171,7 @@ static inline void I80TransferFullSynced(const void *aBuffer)
 {
     while(gpio_get_level(I80_PIN_NUM_TE) == 0) { ; }
     esp_lcd_panel_io_tx_color(PanelIOHandle, ILI9163_RAMWR, aBuffer, I80_LCD_H_RES * I80_LCD_V_RES * 2);
+    TransferDone = 0;
 }
 
 static inline void I80TransferPartial(const int aXStart, const int aYStart, const int aXEnd, const int aYEnd, const void *aBuffer)
