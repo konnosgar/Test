@@ -84,7 +84,7 @@ void app_main(void)
         if(LineYPosition == 160) Direction = -1;
         else if(LineYPosition == 0) Direction = 1;
 
-        // vTaskDelay(pdMS_TO_TICKS(10));
+        vTaskDelay(3);
         // ESP_LOGI(TAG, "LOOP %d", LoopCounter++);
     }
 
