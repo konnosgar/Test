@@ -159,6 +159,12 @@ static inline void I80TransferFull(const void *aBuffer)
     // panel_io_i80_tx_color(...);
 }
 
+static inline void I80TransferFullSynced(const void *aBuffer)
+{
+    while(gpio_get_level(I80_PIN_NUM_TE) == 0) { ; }
+    esp_lcd_panel_io_tx_color(PanelIOHandle, ILI9163_RAMWR, aBuffer, I80_LCD_H_RES * I80_LCD_V_RES * 2);
+}
+
 static inline void I80TransferPartial(const int aXStart, const int aYStart, const int aXEnd, const int aYEnd, const void *aBuffer)
 {
     esp_lcd_panel_draw_bitmap(PanelHandle, aXStart, aYStart, aXEnd, aYEnd, aBuffer);
