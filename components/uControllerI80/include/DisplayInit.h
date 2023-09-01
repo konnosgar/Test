@@ -85,7 +85,7 @@ DRAM_ATTR static const TScreenCommand ILI9163_InitCommandArray[] = {
 	{ILI9163_SLPOUT, 	{0}, TFT_INIT_DELAY},   // Exit sleep mode
 
     // Color Settings
-	{ILI9163_IPF, 	    {0xE5}, 1}, 			// Set pixel format // P.143 E = 1110 [18-bit (1 Pixel / 3 Transfers)] | 6 = 0110 [18-bit / Pixel]
+	{ILI9163_IPF, 	    {0xE6}, 1}, 			// Set pixel format // P.143 E = 1110 [18-bit (1 Pixel / 3 Transfers)] | 6 = 0110 [18-bit / Pixel]
 
     // Gamma Settings
 	{ILI9163_GAMSET, 	{0x04}, 1}, 			// Set Gamma curve 3

@@ -40,20 +40,20 @@ void app_main(void)
     static lv_disp_draw_buf_t disp_buf; // contains internal graphic buffer(s) called draw buffer(s)
     static lv_disp_drv_t disp_drv;      // contains callback functions
 
-    // Initialise(example_notify_lvgl_flush_ready, &disp_drv);
-    Initialise(I80TransferDoneCallback, NULL);
+    // I80Initialise(example_notify_lvgl_flush_ready, &disp_drv);
+    I80Initialise(I80TransferDoneCallback, NULL);
 
     ESP_LOGI(TAG, "Initialize LVGL library");
     // lv_init();
 
     // Allocate draw buffers for LGVL
-    lv_color_t *buf1 = NULL;
+    uint8_t *buf1 = NULL;
     lv_color_t *buf2 = NULL;
 
 #if CONFIG_EXAMPLE_LCD_I80_COLOR_IN_PSRAM
-    buf1 = (lv_color_t*)heap_caps_aligned_alloc(I80_PSRAM_DATA_ALIGNMENT, I80_LCD_H_RES * I80_LCD_V_RES * sizeof(lv_color_t), MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    buf1 = (uint8_t*)heap_caps_aligned_alloc(I80_PSRAM_DATA_ALIGNMENT, I80_LCD_H_RES * I80_LCD_V_RES * sizeof(lv_color_t), MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
 #else
-    buf1 = (lv_color_t*)heap_caps_malloc(I80_LCD_H_RES * I80_LCD_V_RES * 2 /*sizeof(lv_color_t)*/, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+    buf1 = (uint8_t*)heap_caps_malloc(I80_LCD_H_RES * I80_LCD_V_RES * 3 /*sizeof(lv_color_t)*/, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
 #endif
     assert(buf1);
 #if CONFIG_EXAMPLE_LCD_I80_COLOR_IN_PSRAM
@@ -64,7 +64,7 @@ void app_main(void)
     assert(buf2);
     ESP_LOGI(TAG, "buf1@%p, buf2@%p", buf1, buf2);
 
-    memset(buf1, 0x00, I80_LCD_H_RES * I80_LCD_V_RES * 2);
+    memset(buf1, 0x00, I80_LCD_H_RES * I80_LCD_V_RES * 3);
 
     int LoopCounter = 0;
 
@@ -73,9 +73,9 @@ void app_main(void)
 
     while(1)
     {
-        while(TransferDone == 0) { ; }
-        memset(buf1, 0xFF, I80_LCD_H_RES * I80_LCD_V_RES * 2);
-        memset(buf1 + I80_LCD_H_RES * LineYPosition, 0x00, I80_LCD_H_RES * 2);
+        while(I80TransferDone == 0) { ; }
+        memset(buf1, 0xFF, I80_LCD_H_RES * I80_LCD_V_RES * 3);
+        memset(buf1 + (I80_LCD_H_RES * LineYPosition * 3), 0x00, I80_LCD_H_RES * 3);
         
         I80TransferFullSynced(buf1);
 

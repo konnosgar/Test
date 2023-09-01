@@ -22,15 +22,15 @@ static esp_lcd_i80_bus_handle_t I80BusHandle = NULL;
 static esp_lcd_panel_io_handle_t PanelIOHandle = NULL;
 static esp_lcd_panel_handle_t PanelHandle = NULL;
 
-bool TransferDone = 1;
+bool I80TransferDone = 1;
 
 static bool I80TransferDoneCallback(esp_lcd_panel_io_handle_t panel_io, esp_lcd_panel_io_event_data_t *edata, void *user_ctx)
 {
-    TransferDone = 1;
+    I80TransferDone = 1;
     return true;
 }
 
-void InitialiseBus()
+void I80InitialiseBus()
 {
     ESP_LOGI(TAG, "Initialise I80 bus");
 
@@ -60,7 +60,7 @@ void InitialiseBus()
     ESP_ERROR_CHECK(esp_lcd_new_i80_bus(&BusConfig, &I80BusHandle));
 }
 
-void InitialisePanelIO(esp_lcd_panel_io_color_trans_done_cb_t aColorTransferDoneCallback, void* aCallbackParameter)
+void I80InitialisePanelIO(esp_lcd_panel_io_color_trans_done_cb_t aColorTransferDoneCallback, void* aCallbackParameter)
 {
     ESP_LOGI(TAG, "Initialize I80 panel io");
 
@@ -101,7 +101,7 @@ void InitialisePanelIO(esp_lcd_panel_io_color_trans_done_cb_t aColorTransferDone
     ESP_ERROR_CHECK(esp_lcd_new_panel_io_i80(I80BusHandle, &IOConfig, &PanelIOHandle));
 }
 
-void InitialisePanelDevice()
+void I80InitialisePanelDevice()
 {
     ESP_LOGI(TAG, "Initialize I80 panel handle");
 
@@ -110,7 +110,7 @@ void InitialisePanelDevice()
     esp_lcd_panel_dev_config_t PanelDeviceConfig = {
         .reset_gpio_num = I80_PIN_NUM_RST,
         .rgb_endian = LCD_RGB_ENDIAN_RGB,
-        .bits_per_pixel = 16,
+        .bits_per_pixel = 18, //16,
         .flags = {
             .reset_active_high = 0 // RESET is active LOW
         },
@@ -137,7 +137,7 @@ void SendTScreenCommandArray(const TScreenCommand *aCmdArr)
 	}
 }
 
-void InitialisePanelSettings()
+void I80InitialisePanelSettings()
 {
     esp_lcd_panel_reset(PanelHandle);
     esp_lcd_panel_init(PanelHandle);
@@ -145,15 +145,15 @@ void InitialisePanelSettings()
     SendTScreenCommandArray(ILI9163_InitCommandArray);
 }
 
-void Initialise(esp_lcd_panel_io_color_trans_done_cb_t aColorTransferDoneCallback, void* aCallbackParameter)
+void I80Initialise(esp_lcd_panel_io_color_trans_done_cb_t aColorTransferDoneCallback, void* aCallbackParameter)
 {
-    InitialiseBus();
+    I80InitialiseBus();
 
-    InitialisePanelIO(aColorTransferDoneCallback, aCallbackParameter);
+    I80InitialisePanelIO(aColorTransferDoneCallback, aCallbackParameter);
 
-    InitialisePanelDevice();
+    I80InitialisePanelDevice();
 
-    InitialisePanelSettings();
+    I80InitialisePanelSettings();
 }
 
 static inline void I80TransferFull(const void *aBuffer)
@@ -161,7 +161,7 @@ static inline void I80TransferFull(const void *aBuffer)
     // TODO: Add Tearing Pin control
 
     // esp_lcd_panel_draw_bitmap(PanelHandle, 0, 0, I80_LCD_H_RES, I80_LCD_V_RES, aBuffer);
-    esp_lcd_panel_io_tx_color(PanelIOHandle, ILI9163_RAMWR, aBuffer, I80_LCD_H_RES * I80_LCD_V_RES * 2);
+    esp_lcd_panel_io_tx_color(PanelIOHandle, ILI9163_RAMWR, aBuffer, I80_LCD_H_RES * I80_LCD_V_RES * 3);
 
     // panel_st7789_draw_bitmap(...);
     // panel_io_i80_tx_color(...);
@@ -170,8 +170,8 @@ static inline void I80TransferFull(const void *aBuffer)
 static inline void I80TransferFullSynced(const void *aBuffer)
 {
     while(gpio_get_level(I80_PIN_NUM_TE) == 0) { ; }
-    esp_lcd_panel_io_tx_color(PanelIOHandle, ILI9163_RAMWR, aBuffer, I80_LCD_H_RES * I80_LCD_V_RES * 2);
-    TransferDone = 0;
+    esp_lcd_panel_io_tx_color(PanelIOHandle, ILI9163_RAMWR, aBuffer, I80_LCD_H_RES * I80_LCD_V_RES * 3);
+    I80TransferDone = 0;
 }
 
 static inline void I80TransferPartial(const int aXStart, const int aYStart, const int aXEnd, const int aYEnd, const void *aBuffer)
