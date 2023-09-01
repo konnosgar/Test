@@ -51,7 +51,7 @@ typedef struct {
 static inline void SetPixel18(const int aX, const int aY, const Color18 aColor, Color18* aBuffer)
 {
     aBuffer += (aY << 7) + aX;
-    aBuffer[0] = aColor;
+    *aBuffer = aColor;
 }
 
 static inline void SetPixel(const int aX, const int aY, const Color24 aColor, uint8_t* aBuffer)
