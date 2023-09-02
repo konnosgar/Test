@@ -28,7 +28,7 @@ void app_main(void)
     // Initialise I80Controller Bus, IO and Panel Handle
     I80Initialise(I80TransferDoneCallback, NULL);
 
-    // Allocate draw buffers
+    // Allocate Draw Buffers
     uint8_t *buf1 = NULL;
     Color24 *buf2 = NULL;
 
@@ -46,7 +46,7 @@ void app_main(void)
     assert(buf2);
     ESP_LOGI(TAG, "buf1@%p, buf2@%p", buf1, buf2);
 
-    // Initialise Buffers, Fill White
+    // Initialise Draw Buffers, Fill White
     memset(buf1, 0x00, I80_LCD_H_RES * I80_LCD_V_RES * 3);
     memset(buf2, 0x00, I80_LCD_H_RES * I80_LCD_V_RES * sizeof(Color24));
 
