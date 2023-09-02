@@ -1,20 +1,5 @@
-| Supported Targets | ESP32 | ESP32-S2 | ESP32-S3 |
-| ----------------- | ----- | -------- | -------- |
-# LVGL porting example (based on i80 interfaced LCD controller)
-
-LVGL is an open-source graphics library for creating modern GUIs. It has plenty of built-in graphical elements with low memory footprint, which is friendly for embedded GUI applications.
-
-This example can be taken as a skeleton of porting the LVGL library onto the `esp_lcd` driver layer. **Note** that, this example only focuses on the display interface, regardless of the input device driver.
-
-The whole porting code is located in [i80_controller_example_main.c](main/i80_controller_example_main.c), and the UI demo code is located in [lvgl_demo_ui.c](main/lvgl_demo_ui.c).
-
-The UI will display two images (one Espressif logo and another Espressif text), which have been converted into C arrays by the [online converting tool](https://lvgl.io/tools/imageconverter), and will be compiled directly into application binary.
-
-This example is constructed by [IDF component manager](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/tools/idf-component-manager.html), all the external dependency will be handled by the CMake build system automatically. In this case, it will help download the lvgl from [registry](https://components.espressif.com/component/lvgl/lvgl), with the version specified in the [manifest file](main/idf_component.yml).
-
-This example uses the [esp_timer](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/system/esp_timer.html) to generate the ticks needed by LVGL. For more porting guides, please refer to [LVGL porting doc](https://docs.lvgl.io/master/porting/index.html).
-
-## How to use the example
+| Supported Targets | ESP32-S3 |
+| ----------------- | -------- |
 
 ### Hardware Required
 
@@ -78,31 +63,6 @@ The first time you run `idf.py` for the example will cost extra time as the buil
 (To exit the serial monitor, type ``Ctrl-]``.)
 
 See the [Getting Started Guide](https://docs.espressif.com/projects/esp-idf/en/latest/get-started/index.html) for full steps to configure and use ESP-IDF to build projects.
-
-### Example Output
-
-```bash
-I (0) cpu_start: Starting scheduler on APP CPU.
-I (418) example: Turn off LCD backlight
-I (418) gpio: GPIO[2]| InputEn: 0| OutputEn: 1| OpenDrain: 0| Pullup: 0| Pulldown: 0| Intr:0
-I (428) example: Initialize Intel 8080 bus
-I (438) example: Install LCD driver of st7789
-I (558) example: Turn on LCD backlight
-I (558) example: Initialize LVGL library
-I (558) example: Register display driver to LVGL
-I (558) example: Install LVGL tick timer
-I (558) example: Display LVGL animation
-```
-
-## Touch Screen Support
-
-This example supports touch screen connected via I2C. You can enable it by running `idf.py menuconfig` and navigating to `Example Configuration -> Enable LCD touch`. When touch is enabled, there will be a new button in the GUI that can restart the animation.
-
-These touch controllers are supported:
-* [GT911](https://github.com/espressif/esp-bsp/tree/master/components/lcd_touch/esp_lcd_touch_gt911)
-* [TT21100](https://github.com/espressif/esp-bsp/tree/master/components/lcd_touch/esp_lcd_touch_tt21100)
-* [FT5X06](https://github.com/espressif/esp-bsp/tree/master/components/lcd_touch/esp_lcd_touch_ft5x06)
-
 
 ## Troubleshooting
 

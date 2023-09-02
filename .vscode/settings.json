@@ -10,7 +10,8 @@
         "task.h": "c",
         "ucontrolleri80.h": "c",
         "pinnumbers.h": "c",
-        "displayinit.h": "c"
+        "displayinit.h": "c",
+        "esp_err.h": "c"
     },
     "idf.adapterTargetName": "esp32s3",
     "idf.port": "/dev/cu.usbserial-1140",
