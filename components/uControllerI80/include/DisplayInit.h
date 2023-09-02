@@ -93,12 +93,12 @@ DRAM_ATTR static const TScreenCommand ILI9163_InitCommandArray[] = {
 	{ILI9163_GAMPOS, 	{0x3F, 0x25, 0x1C, 0x1E, 0x20, 0x12, 0x2A, 0x90, 0x24, 0x11, 0x00, 0x00, 0x00, 0x00, 0x00}, 15},    // Positive Gamma
 	{ILI9163_GAMNEG, 	{0x20, 0x20, 0x20, 0x20, 0x05, 0x00, 0x15, 0xA7, 0x3D, 0x18, 0x25, 0x2A, 0x2B, 0x2B, 0x3A}, 15}, 	// Negative Gamma
 
-	{ILI9163_FRCTL1, 	{0x04, 0x02}, 2},	// Frame Rate Control (Normal Mode / Full Colors) 
-	{ILI9163_PWRCTL1,  	{0x1E, 0x00}, 2}, 	// Power control 1
-	{ILI9163_VCOMCTL1, 	{0x1F, 0x5B}, 2}, 	// Vcom control 1
+	{ILI9163_FRCTL1, 	{0x04, 0x02}, 2},		// Frame Rate Control (Normal Mode / Full Colors) / 0x04, 0x02 = 154.32 FPS
+	{ILI9163_PWRCTL1,  	{0x1E, 0x00}, 2}, 		// Power control 1
+	{ILI9163_VCOMCTL1, 	{0x1F, 0x5B}, 2}, 		// Vcom control 1
 	{ILI9163_CASET, 	{0x00, 0x00, 0x00, ILI9163_WIDTH - 1}, 4},	// Set column address
 	{ILI9163_PASET, 	{0x00, 0x00, 0x00, ILI9163_HEIGHT - 1}, 4}, // Set page address
-	{ILI9163_TEON, 		{0x00}, 1},			// Tearing Effect On / 0x00 = V-Blanking Only | 0x01 = V- & H-Blanking
+	{ILI9163_TEON, 		{0x00}, 1},				// Tearing Effect On / 0x00 = V-Blanking Only | 0x01 = V- & H-Blanking
 
 	{ILI9163_DISON, 	{0}, TFT_INIT_DELAY},   // Set display on
 	{0, 				{0}, TFT_INIT_CMD_ARRAY_END}

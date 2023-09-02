@@ -25,10 +25,10 @@ static inline void SetPixel24(const int aX, const int aY, const Color24 aColor, 
 
 void app_main(void)
 {
-    // I80Initialise(example_notify_lvgl_flush_ready, &disp_drv);
+    // Initialise I80Controller Bus, IO and Panel Handle
     I80Initialise(I80TransferDoneCallback, NULL);
 
-    // Allocate draw buffers for LGVL
+    // Allocate draw buffers
     uint8_t *buf1 = NULL;
     Color24 *buf2 = NULL;
 
@@ -46,6 +46,7 @@ void app_main(void)
     assert(buf2);
     ESP_LOGI(TAG, "buf1@%p, buf2@%p", buf1, buf2);
 
+    // Initialise Buffers, Fill White
     memset(buf1, 0x00, I80_LCD_H_RES * I80_LCD_V_RES * 3);
     memset(buf2, 0x00, I80_LCD_H_RES * I80_LCD_V_RES * sizeof(Color24));
 
