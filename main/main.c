@@ -9,33 +9,18 @@
 // static const char *TAG = "main";
 
 typedef struct {
-    uint8_t R, G, B;
-} Color24;
-
-typedef struct {
     union {
         struct {
             uint8_t R, G, B;
         } Colors;
         uint8_t Color[3];
     };
-} Color18;
+} Color24;
 
-static inline void SetPixel24(const int aX, const int aY, const Color18 aColor, Color18* aBuffer)
+static inline void SetPixel24(const int aX, const int aY, const Color24 aColor, Color24* aBuffer)
 {
     aBuffer = aBuffer + (aY << 7) + aX;
     *aBuffer = aColor;
-}
-
-static inline void SetPixel(const int aX, const int aY, const Color24 aColor, uint8_t* aBuffer)
-{
-    uint32_t Color = aColor.R | (aColor.G << 8) | (aColor.B << 16);
-    aBuffer += aX * 3;
-    aBuffer += 8 << aY;
-    aBuffer[0] = aColor.R;
-    aBuffer[1] = aColor.G;
-    aBuffer[2] = aColor.B;
-    // *aBuffer = ( (uint32_t)*aBuffer & (Color << (8 * aY)) );
 }
 
 void app_main(void)
@@ -45,7 +30,7 @@ void app_main(void)
 
     // Allocate draw buffers for LGVL
     uint8_t *buf1 = NULL;
-    Color18 *buf2 = NULL;
+    Color24 *buf2 = NULL;
 
 #if CONFIG_EXAMPLE_LCD_I80_COLOR_IN_PSRAM
     buf1 = (uint8_t*)heap_caps_aligned_alloc(I80_PSRAM_DATA_ALIGNMENT, I80_LCD_H_RES * I80_LCD_V_RES * sizeof(lv_color_t), MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
@@ -54,23 +39,22 @@ void app_main(void)
 #endif
     assert(buf1);
 #if CONFIG_EXAMPLE_LCD_I80_COLOR_IN_PSRAM
-    buf2 = (Color18*)heap_caps_aligned_alloc(I80_PSRAM_DATA_ALIGNMENT, I80_LCD_H_RES * I80_LCD_V_RES * sizeof(Color18), MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    buf2 = (Color24*)heap_caps_aligned_alloc(I80_PSRAM_DATA_ALIGNMENT, I80_LCD_H_RES * I80_LCD_V_RES * sizeof(Color24), MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
 #else
-    buf2 = (Color18*)heap_caps_malloc(I80_LCD_H_RES * I80_LCD_V_RES * sizeof(Color18), MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+    buf2 = (Color24*)heap_caps_malloc(I80_LCD_H_RES * I80_LCD_V_RES * sizeof(Color24), MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
 #endif
     assert(buf2);
     ESP_LOGI(TAG, "buf1@%p, buf2@%p", buf1, buf2);
 
     memset(buf1, 0x00, I80_LCD_H_RES * I80_LCD_V_RES * 3);
-    memset(buf2, 0x00, I80_LCD_H_RES * I80_LCD_V_RES * sizeof(Color18));
+    memset(buf2, 0x00, I80_LCD_H_RES * I80_LCD_V_RES * sizeof(Color24));
 
     int LoopCounter = 0;
 
     int LineYPosition = 0;
     int Direction = 1;
 
-    Color24 LineColor = { 255, 0, 0 };
-    Color18 LineColor18 = { .Color = {255, 0, 0} };
+    Color24 LineColor = { .Color = {255, 0, 0} };
 
     uint8_t Red = 5, Green = -1, Blue = 1;
     uint8_t RedDir = 1, GreenDir = 254, BlueDir = 1;
@@ -82,7 +66,7 @@ void app_main(void)
         // memset(buf1 + (I80_LCD_H_RES * LineYPosition * 3), 0x00, I80_LCD_H_RES * 3);
         for(int i = 0; i < 128; i++) 
         {
-            SetPixel24(i, LineYPosition, LineColor18, buf2);
+            SetPixel24(i, LineYPosition, LineColor, buf2);
         }
 
         if(Red == 0 || Red == 255) 
@@ -102,9 +86,9 @@ void app_main(void)
             } else Green += GreenDir;
         } else Red += RedDir;
 
-        LineColor18.Colors.R = Red;
-        LineColor18.Colors.G = Green;
-        LineColor18.Colors.B = Blue;
+        LineColor.Colors.R = Red;
+        LineColor.Colors.G = Green;
+        LineColor.Colors.B = Blue;
         
         I80TransferFullSynced(buf2);
 
