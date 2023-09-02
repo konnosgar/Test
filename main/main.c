@@ -48,9 +48,9 @@ typedef struct {
     };
 } Color18;
 
-static inline void SetPixel18(const int aX, const int aY, const Color18 aColor, Color18* aBuffer)
+static inline void SetPixel24(const int aX, const int aY, const Color18 aColor, const Color18* aBuffer)
 {
-    aBuffer += (aY << 7) + aX;
+    aBuffer = aBuffer + (aY << 7) + aX;
     *aBuffer = aColor;
 }
 
@@ -105,8 +105,8 @@ void app_main(void)
     Color24 LineColor = { 255, 0, 0 };
     Color18 LineColor18 = { .Color = {255, 0, 0} };
 
-    uint8_t Red = 5, Green = 1, Blue = 1;
-    uint8_t RedDir = 1, GreenDir = 1, BlueDir = 1;
+    uint8_t Red = 5, Green = -1, Blue = 1;
+    uint8_t RedDir = 1, GreenDir = 254, BlueDir = 1;
 
     while(1)
     {
@@ -115,11 +115,25 @@ void app_main(void)
         // memset(buf1 + (I80_LCD_H_RES * LineYPosition * 3), 0x00, I80_LCD_H_RES * 3);
         for(int i = 0; i < 128; i++) 
         {
-            SetPixel18(i, LineYPosition, LineColor18, buf2);
+            SetPixel24(i, LineYPosition, LineColor18, buf2);
         }
 
-        Red += RedDir;
-        if(Red == 4 || Red == 252) RedDir = -RedDir;
+        if(Red == 0 || Red == 255) 
+        {
+            if(Green == 0 || Green == 255)
+            {
+                if(Blue == 0 || Blue == 255)
+                {
+                    RedDir = -RedDir;
+                    GreenDir = -GreenDir;
+                    BlueDir = -BlueDir;
+
+                    Red += RedDir;
+                    Green += GreenDir;
+                    Blue += BlueDir;
+                } else Blue += BlueDir;
+            } else Green += GreenDir;
+        } else Red += RedDir;
 
         LineColor18.Colors.R = Red;
         LineColor18.Colors.G = Green;
