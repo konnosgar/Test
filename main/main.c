@@ -2,9 +2,14 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/semphr.h"
 #include "esp_err.h"
 #include "esp_log.h"
 #include "string.h"
+#include "esp_task_wdt.h"
+
+#define PRO_CORE_ID (0)
+#define APP_CORE_ID (1)
 
 // static const char *TAG = "main";
 
@@ -55,49 +60,56 @@ void app_main(void)
     int LineYPosition = 0;
     int Direction = 1;
 
-    Color24 LineColor = { .Color = {255, 0, 0} };
+    Color24 LineColor = { .Color = {255, 255, 255} };
 
     uint8_t Red = 5, Green = -1, Blue = 1;
     uint8_t RedDir = 1, GreenDir = 254, BlueDir = 1;
 
+    TaskHandle_t BlitTaskHandle = NULL;
+    xTaskCreatePinnedToCore(I80TransferTask, "Blit", 4096, buf2, configMAX_PRIORITIES - 1, &BlitTaskHandle, PRO_CORE_ID);
+    configASSERT( BlitTaskHandle );
+    ESP_LOGI(TAG, "Blit Task Created!");
+
     while(1)
     {
         while(I80TransferDone == 0) { ; }
-        memset(buf2, 0xFF, I80_LCD_H_RES * I80_LCD_V_RES * 3);
+        memset(buf2, 0x00, I80_LCD_H_RES * I80_LCD_V_RES * 3);
         // memset(buf1 + (I80_LCD_H_RES * LineYPosition * 3), 0x00, I80_LCD_H_RES * 3);
         for(int i = 0; i < 128; i++) 
         {
             SetPixel24(i, LineYPosition, LineColor, buf2);
         }
 
-        if(Red == 0 || Red == 255) 
-        {
-            if(Green == 0 || Green == 255)
-            {
-                if(Blue == 0 || Blue == 255)
-                {
-                    RedDir = -RedDir;
-                    GreenDir = -GreenDir;
-                    BlueDir = -BlueDir;
+        // if(Red == 0 || Red == 255) 
+        // {
+        //     if(Green == 0 || Green == 255)
+        //     {
+        //         if(Blue == 0 || Blue == 255)
+        //         {
+        //             RedDir = -RedDir;
+        //             GreenDir = -GreenDir;
+        //             BlueDir = -BlueDir;
 
-                    Red += RedDir;
-                    Green += GreenDir;
-                    Blue += BlueDir;
-                } else Blue += BlueDir;
-            } else Green += GreenDir;
-        } else Red += RedDir;
+        //             Red += RedDir;
+        //             Green += GreenDir;
+        //             Blue += BlueDir;
+        //         } else Blue += BlueDir;
+        //     } else Green += GreenDir;
+        // } else Red += RedDir;
 
-        LineColor.Colors.R = Red;
-        LineColor.Colors.G = Green;
-        LineColor.Colors.B = Blue;
+        // LineColor.Colors.R = Red;
+        // LineColor.Colors.G = Green;
+        // LineColor.Colors.B = Blue;
         
-        I80TransferFullSynced(buf2);
-
         LineYPosition += Direction;
-        if(LineYPosition == 160) Direction = -1;
+        if(LineYPosition == 159) Direction = -1;
         else if(LineYPosition == 0) Direction = 1;
 
+        // taskYIELD();
+
+        xSemaphoreGive(BlitSemaphore);
         vTaskDelay(1);
+
         // ESP_LOGI(TAG, "LOOP %d", LineYPosition);
     }
 }

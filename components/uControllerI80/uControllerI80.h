@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/semphr.h"
 // #include "esp_timer.h"
 #include "esp_lcd_panel_io.h"
 #include "esp_lcd_panel_vendor.h"
@@ -24,7 +25,9 @@ static esp_lcd_panel_handle_t PanelHandle = NULL;
 
 bool I80TransferDone = 1;
 
-static bool I80TransferDoneCallback(esp_lcd_panel_io_handle_t panel_io, esp_lcd_panel_io_event_data_t *edata, void *user_ctx)
+static DRAM_ATTR SemaphoreHandle_t BlitSemaphore = NULL;
+
+static IRAM_ATTR bool I80TransferDoneCallback(esp_lcd_panel_io_handle_t panel_io, esp_lcd_panel_io_event_data_t *edata, void *user_ctx)
 {
     I80TransferDone = 1;
     return true;
@@ -33,6 +36,8 @@ static bool I80TransferDoneCallback(esp_lcd_panel_io_handle_t panel_io, esp_lcd_
 void I80InitialiseBus()
 {
     ESP_LOGI(TAG, "Initialise I80 bus");
+
+    BlitSemaphore = xSemaphoreCreateBinary();
 
     // esp_lcd_i80_bus_handle_t i80_bus = NULL;
 
@@ -172,6 +177,19 @@ static inline void I80TransferFullSynced(const void *aBuffer)
     while(gpio_get_level(I80_PIN_NUM_TE) == 0) { ; }
     esp_lcd_panel_io_tx_color(PanelIOHandle, ILI9163_RAMWR, aBuffer, I80_LCD_H_RES * I80_LCD_V_RES * 3);
     I80TransferDone = 0;
+}
+
+TaskFunction_t I80TransferTask(const void *aBuffer)
+{
+    ESP_LOGI(TAG, "Entered Blit Task");
+    while(1)
+    {
+        if(xSemaphoreTake(BlitSemaphore, portMAX_DELAY))
+        {
+            // ESP_LOGI(TAG, "Blit");
+            I80TransferFullSynced(aBuffer);
+        }
+    }
 }
 
 static inline void I80TransferPartial(const int aXStart, const int aYStart, const int aXEnd, const int aYEnd, const void *aBuffer)
