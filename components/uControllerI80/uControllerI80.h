@@ -26,7 +26,6 @@ static esp_lcd_panel_handle_t PanelHandle = NULL;
 bool I80TransferDone = 1;
 
 static DRAM_ATTR SemaphoreHandle_t BlitSemaphore = NULL;
-static DRAM_ATTR SemaphoreHandle_t RenderSemaphore = NULL;
 
 typedef struct {
     union {
@@ -39,17 +38,24 @@ typedef struct {
 
 typedef struct {
     TColor24* Buffer;
-    portMUX_TYPE Lock;
+    SemaphoreHandle_t RenderSemaphore;
+    void* NextBufferPointer;
 } TVideoBuffer;
 
 static DRAM_ATTR TVideoBuffer VideoBuffer1;
 static DRAM_ATTR TVideoBuffer VideoBuffer2;
+static DRAM_ATTR TVideoBuffer VideoBuffer3;
+
+static DRAM_ATTR TVideoBuffer* BlitBufferPointer;
+static DRAM_ATTR TVideoBuffer* RendBufferPointer;
 
 static IRAM_ATTR bool I80TransferDoneCallback(esp_lcd_panel_io_handle_t panel_io, esp_lcd_panel_io_event_data_t *edata, void *user_ctx)
 {
     portBASE_TYPE HigherPriorityTaskWoken = pdTRUE;
 
-    xSemaphoreGiveFromISR(RenderSemaphore, &HigherPriorityTaskWoken);
+    xSemaphoreGiveFromISR((*(TVideoBuffer**)user_ctx)->RenderSemaphore, &HigherPriorityTaskWoken);
+
+    BlitBufferPointer = BlitBufferPointer->NextBufferPointer;
 
     return HigherPriorityTaskWoken == pdTRUE; // Whether a high priority task is woken up by this function
 
@@ -176,12 +182,33 @@ void I80InitialiseBuffers()
 {
     VideoBuffer1.Buffer = (TColor24*)heap_caps_malloc(I80_LCD_H_RES * I80_LCD_V_RES * sizeof(TColor24), MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
     assert(VideoBuffer1.Buffer);
+    VideoBuffer1.RenderSemaphore = xSemaphoreCreateBinary();
+    xSemaphoreGive(VideoBuffer1.RenderSemaphore);
+
+    VideoBuffer2.Buffer = (TColor24*)heap_caps_malloc(I80_LCD_H_RES * I80_LCD_V_RES * sizeof(TColor24), MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+    assert(VideoBuffer2.Buffer);
+    VideoBuffer2.RenderSemaphore = xSemaphoreCreateBinary();
+    xSemaphoreGive(VideoBuffer2.RenderSemaphore);
+
+    VideoBuffer3.Buffer = (TColor24*)heap_caps_malloc(I80_LCD_H_RES * I80_LCD_V_RES * sizeof(TColor24), MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+    assert(VideoBuffer3.Buffer);
+    VideoBuffer3.RenderSemaphore = xSemaphoreCreateBinary();
+    xSemaphoreGive(VideoBuffer3.RenderSemaphore);
+
+    // Setup Next Buffer Pointers
+    // VideoBuffer1.NextBufferPointer = &VideoBuffer2;
+    // VideoBuffer2.NextBufferPointer = &VideoBuffer1;
+
+    VideoBuffer1.NextBufferPointer = &VideoBuffer2;
+    VideoBuffer2.NextBufferPointer = &VideoBuffer3;
+    VideoBuffer3.NextBufferPointer = &VideoBuffer1;
+
+    ESP_LOGI(TAG, "VideoBuffer1@%p, VideoBuffer2@%p", VideoBuffer1.Buffer, VideoBuffer2.Buffer);
 }
 
 void I80Initialise(esp_lcd_panel_io_color_trans_done_cb_t aColorTransferDoneCallback, void* aCallbackParameter)
 {
     BlitSemaphore   = xSemaphoreCreateBinary();
-    RenderSemaphore = xSemaphoreCreateBinary();
 
     I80InitialiseBus();
 
@@ -205,10 +232,10 @@ static inline void I80TransferFull(const void *aBuffer)
     // panel_io_i80_tx_color(...);
 }
 
-static inline void I80TransferFullSynced(const TVideoBuffer *aBuffer)
+static inline void I80TransferFullSynced(const TVideoBuffer** aBuffer)
 {
     while(gpio_get_level(I80_PIN_NUM_TE) == 0) { ; }
-    esp_lcd_panel_io_tx_color(PanelIOHandle, ILI9163_RAMWR, aBuffer->Buffer, I80_LCD_H_RES * I80_LCD_V_RES * 3);
+    esp_lcd_panel_io_tx_color(PanelIOHandle, ILI9163_RAMWR, (*aBuffer)->Buffer, I80_LCD_H_RES * I80_LCD_V_RES * 3);
     I80TransferDone = 0;
 }
 
@@ -217,9 +244,10 @@ TaskFunction_t I80TransferTask(const void *aBuffer)
     ESP_LOGI(TAG, "Entered Blit Task");
     while(1)
     {
+        // ESP_LOGI(TAG, "[BLIT] Taking@%p", (*(TVideoBuffer**)aBuffer)->Buffer);
         if(xSemaphoreTake(BlitSemaphore, portMAX_DELAY))
         {
-            // ESP_LOGI(TAG, "Blit");
+            // ESP_LOGI(TAG, "[BLIT] Took@%p", (*(TVideoBuffer**)aBuffer)->Buffer);
             I80TransferFullSynced(aBuffer);
         }
     }

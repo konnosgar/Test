@@ -22,29 +22,10 @@ static inline void SetPixel24(const int aX, const int aY, const TColor24 aColor,
 void app_main(void)
 {
     // Initialise I80Controller Bus, IO and Panel Handle
-    I80Initialise(I80TransferDoneCallback, NULL);
-
-//     // Allocate Draw Buffers
-//     uint8_t *buf1 = NULL;
-//     TColor24 *buf2 = NULL;
-
-// #if CONFIG_EXAMPLE_LCD_I80_COLOR_IN_PSRAM
-//     buf1 = (uint8_t*)heap_caps_aligned_alloc(I80_PSRAM_DATA_ALIGNMENT, I80_LCD_H_RES * I80_LCD_V_RES * sizeof(lv_color_t), MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
-// #else
-//     buf1 = (uint8_t*)heap_caps_malloc(I80_LCD_H_RES * I80_LCD_V_RES * 3 /*sizeof(lv_color_t)*/, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
-// #endif
-//     assert(buf1);
-// #if CONFIG_EXAMPLE_LCD_I80_COLOR_IN_PSRAM
-//     buf2 = (TColor24*)heap_caps_aligned_alloc(I80_PSRAM_DATA_ALIGNMENT, I80_LCD_H_RES * I80_LCD_V_RES * sizeof(TColor24), MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
-// #else
-//     buf2 = (TColor24*)heap_caps_malloc(I80_LCD_H_RES * I80_LCD_V_RES * sizeof(TColor24), MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
-// #endif
-//  assert(buf2);
-//  ESP_LOGI(TAG, "buf1@%p, buf2@%p", buf1, buf2);
-
-    // // Initialise Draw Buffers, Fill White
-    // memset(buf1, 0x00, I80_LCD_H_RES * I80_LCD_V_RES * 3);
-    // memset(buf2, 0x00, I80_LCD_H_RES * I80_LCD_V_RES * sizeof(TColor24));
+    I80Initialise(I80TransferDoneCallback, &BlitBufferPointer);
+    RendBufferPointer = &VideoBuffer1;
+    BlitBufferPointer = RendBufferPointer;
+    // BlitBufferPointer = &VideoBuffer1;
 
     int LoopCounter = 0;
 
@@ -57,21 +38,40 @@ void app_main(void)
     uint8_t RedDir = 1, GreenDir = 254, BlueDir = 1;
 
     TaskHandle_t BlitTaskHandle = NULL;
-    xTaskCreatePinnedToCore(I80TransferTask, "Blit", 4096, (void*)&VideoBuffer1, configMAX_PRIORITIES - 1, &BlitTaskHandle, CORE_ID_PRO);
+    xTaskCreatePinnedToCore(I80TransferTask, "Blit", 4096, (void*)&BlitBufferPointer, configMAX_PRIORITIES - 1, &BlitTaskHandle, CORE_ID_PRO);
     configASSERT( BlitTaskHandle );
     ESP_LOGI(TAG, "Blit Task Created!");
 
+    esp_task_wdt_deinit();
+
     while(1)
     {
-        if(xSemaphoreTake(RenderSemaphore, 10))
+        // ESP_LOGI(TAG, "[REND] Taking@%p", RendBufferPointer->Buffer);
+        if(xSemaphoreTake(RendBufferPointer->RenderSemaphore, portMAX_DELAY))
         {
-            memset(VideoBuffer1.Buffer, 0x00, I80_LCD_H_RES * I80_LCD_V_RES * 3);
+            memset(RendBufferPointer->Buffer, 0x00, I80_LCD_H_RES * I80_LCD_V_RES * 3);
 
             // memset(buf1 + (I80_LCD_H_RES * LineYPosition * 3), 0x00, I80_LCD_H_RES * 3);
-            for(int i = 0; i < 128; i++) 
+            for(int Lines = 0; Lines < LineYPosition; Lines++)
             {
-                SetPixel24(i, LineYPosition, LineColor, VideoBuffer1.Buffer);
+                for(int i = 0; i < 128; i++) 
+                {
+                    SetPixel24(i, Lines, LineColor, RendBufferPointer->Buffer);
+                }
             }
+            // ESP_LOGI(TAG, "Rendered %d", LineYPosition);
+
+            // BlitBufferPointer = RendBufferPointer;
+
+            // ESP_LOGI(TAG, "[REND] Giving@%p", RendBufferPointer->Buffer);
+            xSemaphoreGive(BlitSemaphore);
+
+            RendBufferPointer = (TVideoBuffer*)RendBufferPointer->NextBufferPointer;
+            // ESP_LOGI(TAG, "Switched buffers %p", RendBufferPointer->Buffer);
+
+            // BlitBufferPointer = (TVideoBuffer*)BlitBufferPointer->NextBufferPointer;
+
+            
 
             // if(Red == 0 || Red == 255) 
             // {
@@ -98,8 +98,6 @@ void app_main(void)
             if(LineYPosition == 159) Direction = -1;
             else if(LineYPosition == 0) Direction = 1;
         }
-
-        xSemaphoreGive(BlitSemaphore);
 
         // vTaskDelay(1);
         // ESP_LOGI(TAG, "LOOP %d", LineYPosition);
