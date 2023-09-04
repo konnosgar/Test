@@ -35,15 +35,15 @@ typedef struct {
         } Colors;
         uint8_t Color[3];
     };
-} Color24;
+} TColor24;
 
 typedef struct {
-    Color24* Buffer;
+    TColor24* Buffer;
     portMUX_TYPE Lock;
-} VideoBuffer;
+} TVideoBuffer;
 
-static VideoBuffer VideoBuffer1;
-VideoBuffer VideoBuffer2;
+static DRAM_ATTR TVideoBuffer VideoBuffer1;
+static DRAM_ATTR TVideoBuffer VideoBuffer2;
 
 static IRAM_ATTR bool I80TransferDoneCallback(esp_lcd_panel_io_handle_t panel_io, esp_lcd_panel_io_event_data_t *edata, void *user_ctx)
 {
@@ -174,7 +174,7 @@ void I80InitialisePanelSettings()
 
 void I80InitialiseBuffers()
 {
-    VideoBuffer1.Buffer = (Color24*)heap_caps_malloc(I80_LCD_H_RES * I80_LCD_V_RES * sizeof(Color24), MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+    VideoBuffer1.Buffer = (TColor24*)heap_caps_malloc(I80_LCD_H_RES * I80_LCD_V_RES * sizeof(TColor24), MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
     assert(VideoBuffer1.Buffer);
 }
 
@@ -205,7 +205,7 @@ static inline void I80TransferFull(const void *aBuffer)
     // panel_io_i80_tx_color(...);
 }
 
-static inline void I80TransferFullSynced(const VideoBuffer *aBuffer)
+static inline void I80TransferFullSynced(const TVideoBuffer *aBuffer)
 {
     while(gpio_get_level(I80_PIN_NUM_TE) == 0) { ; }
     esp_lcd_panel_io_tx_color(PanelIOHandle, ILI9163_RAMWR, aBuffer->Buffer, I80_LCD_H_RES * I80_LCD_V_RES * 3);

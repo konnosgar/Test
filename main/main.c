@@ -13,7 +13,7 @@
 
 // static const char *TAG = "main";
 
-static inline void SetPixel24(const int aX, const int aY, const Color24 aColor, Color24* aBuffer)
+static inline void SetPixel24(const int aX, const int aY, const TColor24 aColor, TColor24* aBuffer)
 {
     aBuffer = aBuffer + (aY << 7) + aX;
     *aBuffer = aColor;
@@ -26,7 +26,7 @@ void app_main(void)
 
 //     // Allocate Draw Buffers
 //     uint8_t *buf1 = NULL;
-//     Color24 *buf2 = NULL;
+//     TColor24 *buf2 = NULL;
 
 // #if CONFIG_EXAMPLE_LCD_I80_COLOR_IN_PSRAM
 //     buf1 = (uint8_t*)heap_caps_aligned_alloc(I80_PSRAM_DATA_ALIGNMENT, I80_LCD_H_RES * I80_LCD_V_RES * sizeof(lv_color_t), MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
@@ -35,23 +35,23 @@ void app_main(void)
 // #endif
 //     assert(buf1);
 // #if CONFIG_EXAMPLE_LCD_I80_COLOR_IN_PSRAM
-//     buf2 = (Color24*)heap_caps_aligned_alloc(I80_PSRAM_DATA_ALIGNMENT, I80_LCD_H_RES * I80_LCD_V_RES * sizeof(Color24), MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+//     buf2 = (TColor24*)heap_caps_aligned_alloc(I80_PSRAM_DATA_ALIGNMENT, I80_LCD_H_RES * I80_LCD_V_RES * sizeof(TColor24), MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
 // #else
-//     buf2 = (Color24*)heap_caps_malloc(I80_LCD_H_RES * I80_LCD_V_RES * sizeof(Color24), MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+//     buf2 = (TColor24*)heap_caps_malloc(I80_LCD_H_RES * I80_LCD_V_RES * sizeof(TColor24), MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
 // #endif
 //  assert(buf2);
 //  ESP_LOGI(TAG, "buf1@%p, buf2@%p", buf1, buf2);
 
     // // Initialise Draw Buffers, Fill White
     // memset(buf1, 0x00, I80_LCD_H_RES * I80_LCD_V_RES * 3);
-    // memset(buf2, 0x00, I80_LCD_H_RES * I80_LCD_V_RES * sizeof(Color24));
+    // memset(buf2, 0x00, I80_LCD_H_RES * I80_LCD_V_RES * sizeof(TColor24));
 
     int LoopCounter = 0;
 
     int LineYPosition = 0;
     int Direction = 1;
 
-    Color24 LineColor = { .Color = {255, 255, 255} };
+    TColor24 LineColor = { .Color = {255, 255, 255} };
 
     uint8_t Red = 5, Green = -1, Blue = 1;
     uint8_t RedDir = 1, GreenDir = 254, BlueDir = 1;
