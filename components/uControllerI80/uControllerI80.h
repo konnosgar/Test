@@ -26,18 +26,24 @@ static esp_lcd_panel_handle_t PanelHandle = NULL;
 bool I80TransferDone = 1;
 
 static DRAM_ATTR SemaphoreHandle_t BlitSemaphore = NULL;
+static DRAM_ATTR SemaphoreHandle_t RenderSemaphore = NULL;
+
 
 static IRAM_ATTR bool I80TransferDoneCallback(esp_lcd_panel_io_handle_t panel_io, esp_lcd_panel_io_event_data_t *edata, void *user_ctx)
 {
-    I80TransferDone = 1;
-    return true;
+    portBASE_TYPE HigherPriorityTaskWoken = pdTRUE;
+
+    xSemaphoreGiveFromISR(RenderSemaphore, &HigherPriorityTaskWoken);
+
+    return HigherPriorityTaskWoken == pdTRUE; // Whether a high priority task is woken up by this function
+
+    // I80TransferDone = 1;
+    // return true;
 }
 
 void I80InitialiseBus()
 {
     ESP_LOGI(TAG, "Initialise I80 bus");
-
-    BlitSemaphore = xSemaphoreCreateBinary();
 
     // esp_lcd_i80_bus_handle_t i80_bus = NULL;
 
@@ -152,6 +158,9 @@ void I80InitialisePanelSettings()
 
 void I80Initialise(esp_lcd_panel_io_color_trans_done_cb_t aColorTransferDoneCallback, void* aCallbackParameter)
 {
+    BlitSemaphore   = xSemaphoreCreateBinary();
+    RenderSemaphore = xSemaphoreCreateBinary();
+
     I80InitialiseBus();
 
     I80InitialisePanelIO(aColorTransferDoneCallback, aCallbackParameter);
