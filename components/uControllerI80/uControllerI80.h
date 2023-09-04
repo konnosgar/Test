@@ -28,6 +28,22 @@ bool I80TransferDone = 1;
 static DRAM_ATTR SemaphoreHandle_t BlitSemaphore = NULL;
 static DRAM_ATTR SemaphoreHandle_t RenderSemaphore = NULL;
 
+typedef struct {
+    union {
+        struct {
+            uint8_t R, G, B;
+        } Colors;
+        uint8_t Color[3];
+    };
+} Color24;
+
+typedef struct {
+    Color24* Buffer;
+    portMUX_TYPE Lock;
+} VideoBuffer;
+
+static VideoBuffer VideoBuffer1;
+VideoBuffer VideoBuffer2;
 
 static IRAM_ATTR bool I80TransferDoneCallback(esp_lcd_panel_io_handle_t panel_io, esp_lcd_panel_io_event_data_t *edata, void *user_ctx)
 {
@@ -156,6 +172,12 @@ void I80InitialisePanelSettings()
     SendTScreenCommandArray(ILI9163_InitCommandArray);
 }
 
+void I80InitialiseBuffers()
+{
+    VideoBuffer1.Buffer = (Color24*)heap_caps_malloc(I80_LCD_H_RES * I80_LCD_V_RES * sizeof(Color24), MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+    assert(VideoBuffer1.Buffer);
+}
+
 void I80Initialise(esp_lcd_panel_io_color_trans_done_cb_t aColorTransferDoneCallback, void* aCallbackParameter)
 {
     BlitSemaphore   = xSemaphoreCreateBinary();
@@ -168,6 +190,8 @@ void I80Initialise(esp_lcd_panel_io_color_trans_done_cb_t aColorTransferDoneCall
     I80InitialisePanelDevice();
 
     I80InitialisePanelSettings();
+
+    I80InitialiseBuffers();
 }
 
 static inline void I80TransferFull(const void *aBuffer)
@@ -181,10 +205,10 @@ static inline void I80TransferFull(const void *aBuffer)
     // panel_io_i80_tx_color(...);
 }
 
-static inline void I80TransferFullSynced(const void *aBuffer)
+static inline void I80TransferFullSynced(const VideoBuffer *aBuffer)
 {
     while(gpio_get_level(I80_PIN_NUM_TE) == 0) { ; }
-    esp_lcd_panel_io_tx_color(PanelIOHandle, ILI9163_RAMWR, aBuffer, I80_LCD_H_RES * I80_LCD_V_RES * 3);
+    esp_lcd_panel_io_tx_color(PanelIOHandle, ILI9163_RAMWR, aBuffer->Buffer, I80_LCD_H_RES * I80_LCD_V_RES * 3);
     I80TransferDone = 0;
 }
 

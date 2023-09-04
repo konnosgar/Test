@@ -13,15 +13,6 @@
 
 // static const char *TAG = "main";
 
-typedef struct {
-    union {
-        struct {
-            uint8_t R, G, B;
-        } Colors;
-        uint8_t Color[3];
-    };
-} Color24;
-
 static inline void SetPixel24(const int aX, const int aY, const Color24 aColor, Color24* aBuffer)
 {
     aBuffer = aBuffer + (aY << 7) + aX;
@@ -33,27 +24,27 @@ void app_main(void)
     // Initialise I80Controller Bus, IO and Panel Handle
     I80Initialise(I80TransferDoneCallback, NULL);
 
-    // Allocate Draw Buffers
-    uint8_t *buf1 = NULL;
-    Color24 *buf2 = NULL;
+//     // Allocate Draw Buffers
+//     uint8_t *buf1 = NULL;
+//     Color24 *buf2 = NULL;
 
-#if CONFIG_EXAMPLE_LCD_I80_COLOR_IN_PSRAM
-    buf1 = (uint8_t*)heap_caps_aligned_alloc(I80_PSRAM_DATA_ALIGNMENT, I80_LCD_H_RES * I80_LCD_V_RES * sizeof(lv_color_t), MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
-#else
-    buf1 = (uint8_t*)heap_caps_malloc(I80_LCD_H_RES * I80_LCD_V_RES * 3 /*sizeof(lv_color_t)*/, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
-#endif
-    assert(buf1);
-#if CONFIG_EXAMPLE_LCD_I80_COLOR_IN_PSRAM
-    buf2 = (Color24*)heap_caps_aligned_alloc(I80_PSRAM_DATA_ALIGNMENT, I80_LCD_H_RES * I80_LCD_V_RES * sizeof(Color24), MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
-#else
-    buf2 = (Color24*)heap_caps_malloc(I80_LCD_H_RES * I80_LCD_V_RES * sizeof(Color24), MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
-#endif
-    assert(buf2);
-    ESP_LOGI(TAG, "buf1@%p, buf2@%p", buf1, buf2);
+// #if CONFIG_EXAMPLE_LCD_I80_COLOR_IN_PSRAM
+//     buf1 = (uint8_t*)heap_caps_aligned_alloc(I80_PSRAM_DATA_ALIGNMENT, I80_LCD_H_RES * I80_LCD_V_RES * sizeof(lv_color_t), MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+// #else
+//     buf1 = (uint8_t*)heap_caps_malloc(I80_LCD_H_RES * I80_LCD_V_RES * 3 /*sizeof(lv_color_t)*/, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+// #endif
+//     assert(buf1);
+// #if CONFIG_EXAMPLE_LCD_I80_COLOR_IN_PSRAM
+//     buf2 = (Color24*)heap_caps_aligned_alloc(I80_PSRAM_DATA_ALIGNMENT, I80_LCD_H_RES * I80_LCD_V_RES * sizeof(Color24), MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+// #else
+//     buf2 = (Color24*)heap_caps_malloc(I80_LCD_H_RES * I80_LCD_V_RES * sizeof(Color24), MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+// #endif
+//  assert(buf2);
+//  ESP_LOGI(TAG, "buf1@%p, buf2@%p", buf1, buf2);
 
-    // Initialise Draw Buffers, Fill White
-    memset(buf1, 0x00, I80_LCD_H_RES * I80_LCD_V_RES * 3);
-    memset(buf2, 0x00, I80_LCD_H_RES * I80_LCD_V_RES * sizeof(Color24));
+    // // Initialise Draw Buffers, Fill White
+    // memset(buf1, 0x00, I80_LCD_H_RES * I80_LCD_V_RES * 3);
+    // memset(buf2, 0x00, I80_LCD_H_RES * I80_LCD_V_RES * sizeof(Color24));
 
     int LoopCounter = 0;
 
@@ -66,7 +57,7 @@ void app_main(void)
     uint8_t RedDir = 1, GreenDir = 254, BlueDir = 1;
 
     TaskHandle_t BlitTaskHandle = NULL;
-    xTaskCreatePinnedToCore(I80TransferTask, "Blit", 4096, buf2, configMAX_PRIORITIES - 1, &BlitTaskHandle, PRO_CORE_ID);
+    xTaskCreatePinnedToCore(I80TransferTask, "Blit", 4096, (void*)&VideoBuffer1, configMAX_PRIORITIES - 1, &BlitTaskHandle, PRO_CORE_ID);
     configASSERT( BlitTaskHandle );
     ESP_LOGI(TAG, "Blit Task Created!");
 
@@ -74,12 +65,12 @@ void app_main(void)
     {
         if(xSemaphoreTake(RenderSemaphore, 10))
         {
-            memset(buf2, 0x00, I80_LCD_H_RES * I80_LCD_V_RES * 3);
+            memset(VideoBuffer1.Buffer, 0x00, I80_LCD_H_RES * I80_LCD_V_RES * 3);
 
             // memset(buf1 + (I80_LCD_H_RES * LineYPosition * 3), 0x00, I80_LCD_H_RES * 3);
             for(int i = 0; i < 128; i++) 
             {
-                SetPixel24(i, LineYPosition, LineColor, buf2);
+                SetPixel24(i, LineYPosition, LineColor, VideoBuffer1.Buffer);
             }
 
             // if(Red == 0 || Red == 255) 
