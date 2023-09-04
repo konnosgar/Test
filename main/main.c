@@ -8,8 +8,8 @@
 #include "string.h"
 #include "esp_task_wdt.h"
 
-#define PRO_CORE_ID (0)
-#define APP_CORE_ID (1)
+#define CORE_ID_PRO (0)
+#define CORE_ID_APP (1)
 
 // static const char *TAG = "main";
 
@@ -57,7 +57,7 @@ void app_main(void)
     uint8_t RedDir = 1, GreenDir = 254, BlueDir = 1;
 
     TaskHandle_t BlitTaskHandle = NULL;
-    xTaskCreatePinnedToCore(I80TransferTask, "Blit", 4096, (void*)&VideoBuffer1, configMAX_PRIORITIES - 1, &BlitTaskHandle, PRO_CORE_ID);
+    xTaskCreatePinnedToCore(I80TransferTask, "Blit", 4096, (void*)&VideoBuffer1, configMAX_PRIORITIES - 1, &BlitTaskHandle, CORE_ID_PRO);
     configASSERT( BlitTaskHandle );
     ESP_LOGI(TAG, "Blit Task Created!");
 
