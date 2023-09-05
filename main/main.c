@@ -32,7 +32,7 @@ void app_main(void)
     int LineYPosition = 0;
     int Direction = 1;
 
-    TColor24 LineColor = { .Color = {255, 255, 255} };
+    TColor24 LineColor = { .Color = {255, 0, 0} };
 
     uint8_t Red = 5, Green = -1, Blue = 1;
     uint8_t RedDir = 1, GreenDir = 254, BlueDir = 1;
@@ -58,6 +58,8 @@ void app_main(void)
                 {
                     SetPixel24(i, Lines, LineColor, RendBufferPointer->Buffer);
                 }
+
+                // vTaskDelay(1);
             }
             // ESP_LOGI(TAG, "Rendered %d", LineYPosition);
 
@@ -95,7 +97,7 @@ void app_main(void)
             // LineColor.Colors.B = Blue;
             
             LineYPosition += Direction;
-            if(LineYPosition == 159) Direction = -1;
+            if(LineYPosition == 160) Direction = -1;
             else if(LineYPosition == 0) Direction = 1;
         }
 
